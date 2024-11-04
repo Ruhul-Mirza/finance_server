@@ -9,10 +9,10 @@ const cookieParser = require('cookie-parser');
 // database
 
 // middlewares
+app.use(cors());
 app.use(express.json());
 app.use(cookieParser())
 app.use(router);
-// app.use(cors());
 const port = process.env.PORT || 6999;
 
 

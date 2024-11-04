@@ -1,6 +1,7 @@
 const express = require("express");
 const User = require("../models/user");
 const bcrypt = require("bcryptjs");
+const Expense = require("../models/expenses")
 const router = express.Router();
 const authenticate = require("../middleware/authenticate")
 
@@ -125,7 +126,7 @@ router.post("/expense",async (req,res) => {
     }
 
 
-    try {
+
         
         const newExpense = new Expense({
             home,
@@ -139,15 +140,6 @@ router.post("/expense",async (req,res) => {
 
         const savedExpense = await newExpense.save();
 
-        
-        res.status(201).json({
-            message: "Expense details saved successfully",
-            data: savedExpense
-        });
-    } catch (error) {
-        console.error("Error saving expenses:", error);
-        res.status(500).json({ error: "Failed to save expense details" });
-    }
 
     console.log(req.body);
 

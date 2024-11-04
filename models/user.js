@@ -36,7 +36,11 @@ const userSchema = mongoose.Schema({
                 required: true,
             }
         }
-    ]
+    ],
+    expenses: [{ 
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Expense"
+    }]
     
 })
 
