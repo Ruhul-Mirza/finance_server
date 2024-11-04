@@ -37,9 +37,14 @@ const userSchema = mongoose.Schema({
             }
         }
     ],
-    expenses: [{ 
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Expense"
+    expenses: [{
+        home: String,
+        rentAmount: Number,
+        foodAmount: Number,
+        entertainmentAmount: Number,
+        utilitiesAmount: Number,
+        personalAmount: Number,
+        othersAmount: Number
     }]
     
 })
