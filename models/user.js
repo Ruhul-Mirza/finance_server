@@ -1,78 +1,84 @@
 const mongoose = require("mongoose");
-const validator = require("validator")
-const bcrypt = require("bcrypt")
-const jwt = require("jsonwebtoken")
-const secretKey = "mirzaruhulnazirhussain12345678910"
+const validator = require("validator");
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+const secretKey = "mirzaruhulnazirhussain12345678910";
 const userSchema = mongoose.Schema({
-    fname:{
-        type:String,
-        required:true,
-        trim:true
+  fname: {
+    type: String,
+    required: true,
+    trim: true,
+  },
+  email: {
+    type: String,
+    required: true,
+    unique: true,
+    validate(val) {
+      if (!validator.isEmail(val)) {
+        throw new Error("Please Enter A Valid email");
+      }
     },
-    email:{
-        type:String,
-        required:true,
-        unique:true,
-        validate(val){
-            if(!validator.isEmail(val)){
-                throw new Error("Please Enter A Valid email")
-            }
-        }
+  },
+  password: {
+    type: String,
+    minlength: 6,
+    required: true,
+  },
+  cpassword: {
+    type: String,
+    minlength: 6,
+    required: true,
+  },
+  tokens: [
+    {
+      token: {
+        type: String,
+        required: true,
+      },
     },
-    password:{
-        type:String,
-        minlength:6,
-        required:true
+  ],
+  expenses: [
+    {
+      home: String,
+      rentAmount: Number,
+      foodAmount: Number,
+      entertainmentAmount: Number,
+      utilitiesAmount: Number,
+      personalAmount: Number,
+      othersAmount: Number,
+      monthlyAmount: Number,
     },
-    cpassword:{
-        type:String,
-        minlength:6,
-        required:true
+  ],
+  savings: [
+    {
+      savingsAmount: Number,
     },
-    tokens: [
-        {
-            token: {
-                type: String,
-                required: true,
-            }
-        }
-    ],
-    expenses: [{
-        home: String,
-        rentAmount: Number,
-        foodAmount: Number,
-        entertainmentAmount: Number,
-        utilitiesAmount: Number,
-        personalAmount: Number,
-        othersAmount: Number
-    }]
-    
-})
+  ],
+});
 
+userSchema.pre("save", async function (next) {
+  if (this.isModified("password")) {
+    this.password = await bcrypt.hash(this.password, 13);
+    this.cpassword = await bcrypt.hash(this.cpassword, 13);
+  }
 
-userSchema.pre("save", async function(next){
-    if (this.isModified('password')) {
-        this.password = await bcrypt.hash(this.password, 13);
-        this.cpassword = await bcrypt.hash(this.cpassword, 13);
-    }
-    
-    next()
-})
+  next();
+});
 
 // token
-userSchema.methods.generateAuthtoken = async function() {
-    try {
-        let tokenGenerated = jwt.sign({_id:this._id},secretKey)
-        // if (!this.tokens) {
-        //     this.tokens = [];
-        // }
-        this.tokens = this.tokens.concat({token:tokenGenerated})
-        await this.save();
-        return tokenGenerated;
-    } catch (error) {
-        console.error("Error generating token:", error); 
-        throw new Error("Token generation failed");
-    }
-}
-const User = new mongoose.model("user",userSchema)
+userSchema.methods.generateAuthtoken = async function () {
+  try {
+    let tokenGenerated = jwt.sign({ _id: this._id }, secretKey);
+    // if (!this.tokens) {
+    //     this.tokens = [];
+    // }
+    this.tokens = this.tokens.concat({ token: tokenGenerated });
+    await this.save();
+    return tokenGenerated;
+  } catch (error) {
+    console.error("Error generating token:", error);
+    throw new Error("Token generation failed");
+  }
+};
+const User = new mongoose.model("user", userSchema);
 module.exports = User;

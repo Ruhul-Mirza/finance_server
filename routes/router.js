@@ -2,6 +2,7 @@ const express = require("express");
 const User = require("../models/user");
 const bcrypt = require("bcryptjs");
 const Expense = require("../models/expenses")
+const Saving = require("../models/savings")
 const router = express.Router();
 const authenticate = require("../middleware/authenticate")
 const authMiddleware = require('../middleware/auth')
@@ -14,7 +15,7 @@ router.post("/register", async (req, res) => {
     }
 
     try {
-        // Correct email lookup
+        // Correct email 
         const alreadyUser = await User.findOne({ email: email });
         
         if (alreadyUser) {
@@ -104,40 +105,57 @@ router.get("/logout", authenticate, async (req, res) => {
 });
 router.post("/expense", authMiddleware, async (req, res) => {
     const {
-      home,
-      rentAmount,
-      foodAmount,
-      entertainmentAmount,
-      utilitiesAmount,
-      personalAmount,
-      othersAmount
+        home,
+        rentAmount,
+        foodAmount,
+        entertainmentAmount,
+        utilitiesAmount,
+        personalAmount,
+        othersAmount,
+        monthlyAmount
     } = req.body;
-  
-    // Additional validation can go here if necessary
-  
+
+    // Calculate total expenses
+    const totalExpenses =
+        (home === "rent" ? parseFloat(rentAmount) || 0 : 0) +
+        (parseFloat(foodAmount) || 0) +
+        (parseFloat(entertainmentAmount) || 0) +
+        (parseFloat(utilitiesAmount) || 0) +
+        (parseFloat(personalAmount) || 0) +
+        (parseFloat(othersAmount) || 0);
+
+    // Calculate savingAmount
+    const savingAmount = (parseFloat(monthlyAmount) || 0) - totalExpenses;
+
+    // Prepare expense and saving objects
     const newExpense = {
-      home,
-      rentAmount: home === "rent" ? rentAmount : 0,
-      foodAmount,
-      entertainmentAmount,
-      utilitiesAmount,
-      personalAmount,
-      othersAmount
+        home,
+        rentAmount: home === "rent" ? rentAmount : 0,
+        foodAmount,
+        entertainmentAmount,
+        utilitiesAmount,
+        personalAmount,
+        othersAmount,
+        monthlyAmount
     };
-  
-    // Access the authenticated user
-    const user = req.user; // This should be set by your auth middleware
-    
-    // Push the new expense to the user's expenses array
+
+    const newSaving = {
+        savingAmount
+    };
+
+    const user = req.user;
+
+    // Add to user collection
     user.expenses.push(newExpense);
-  
+    user.savings.push(newSaving);
+
     try {
-      await user.save();
-      res.status(201).json({ message: "Expense saved successfully!" });
+        await user.save();
+        res.status(201).json({ message: "Expense saved successfully!" });
     } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: "Error saving expense" });
+        console.error(error);
+        res.status(500).json({ message: "Error saving expense" });
     }
-  });
+});
 
 module.exports = router;
