@@ -1,8 +1,8 @@
 const express = require("express");
 const User = require("../models/user");
 const bcrypt = require("bcryptjs");
-const Expense = require("../models/expenses")
-const Saving = require("../models/savings")
+// const Expense = require("../models/expenses")
+// const Saving = require("../models/savings")
 const router = express.Router();
 const authenticate = require("../middleware/authenticate")
 const authMiddleware = require('../middleware/auth')
@@ -126,8 +126,9 @@ router.post("/expense", authMiddleware, async (req, res) => {
 
     // Calculate savingAmount
     const savingAmount = (parseFloat(monthlyAmount) || 0) - totalExpenses;
+    
 
-    // Prepare expense and saving objects
+    
     const newExpense = {
         home,
         rentAmount: home === "rent" ? rentAmount : 0,
@@ -140,7 +141,7 @@ router.post("/expense", authMiddleware, async (req, res) => {
     };
 
     const newSaving = {
-        savingAmount
+        savingsAmount:savingAmount
     };
 
     const user = req.user;
@@ -158,4 +159,6 @@ router.post("/expense", authMiddleware, async (req, res) => {
     }
 });
 
+
+  
 module.exports = router;
