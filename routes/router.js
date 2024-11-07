@@ -103,6 +103,7 @@ router.get("/logout", authenticate, async (req, res) => {
         return res.status(500).json({ status: 500, error: "Logout failed" });
     }
 });
+
 router.post("/expense", authMiddleware, async (req, res) => {
     const {
         home,
@@ -126,8 +127,6 @@ router.post("/expense", authMiddleware, async (req, res) => {
 
     // Calculate savingAmount
     const savingAmount = (parseFloat(monthlyAmount) || 0) - totalExpenses;
-    
-
     
     const newExpense = {
         home,
@@ -159,6 +158,14 @@ router.post("/expense", authMiddleware, async (req, res) => {
     }
 });
 
-
+router.get('/chart', async (req, res) => {
+    try {
+      
+      const usersData = await User.find({}, { expenses: 1, savings: 1, _id: 0 });
+      res.json(usersData);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch data" });
+    }
+  });  
   
 module.exports = router;
