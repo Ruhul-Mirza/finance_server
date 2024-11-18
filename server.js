@@ -13,7 +13,7 @@ app.use(cors());
 app.use(express.json());
 app.use(cookieParser())
 app.use(router);
-const port = process.env.PORT || 6999;
+const port = 6999;
 
 
 app.listen(port, ()=>{

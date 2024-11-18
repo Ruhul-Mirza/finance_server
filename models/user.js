@@ -40,6 +40,7 @@ const userSchema = mongoose.Schema({
   expenses: [
     {
       home: String,
+      month:String,
       rentAmount: Number,
       foodAmount: Number,
       entertainmentAmount: Number,
@@ -49,11 +50,7 @@ const userSchema = mongoose.Schema({
       monthlyAmount: Number,
     },
   ],
-  savings: [
-    {
-      savingsAmount: Number,
-    },
-  ],
+ 
 });
 
 userSchema.pre("save", async function (next) {
