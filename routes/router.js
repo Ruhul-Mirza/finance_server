@@ -148,7 +148,7 @@ router.post("/expense", authMiddleware, async (req, res) => {
   });
   
 // Backend Route to Fetch Only Expenses and Savings Data
-router.get("/expensedata", async (req, res) => {
+router.get("/expense", async (req, res) => {
   try {
     const userData = await User.find({}, { expenses: 1, savings: 1 });
     res.json(userData);
@@ -156,7 +156,7 @@ router.get("/expensedata", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
-router.put("/expensedata/:expenseId", authMiddleware, async (req, res) => {
+router.put("/expense/:expenseId", authMiddleware, async (req, res) => {
   const { expenseId } = req.params;
   const { expenses } = req.body; // Only handle expenses, not savings
 
@@ -184,7 +184,7 @@ router.put("/expensedata/:expenseId", authMiddleware, async (req, res) => {
 });
 
 // DELETE route to delete an expense by its ID
-router.delete("/expensedata/:expenseId", async (req, res) => {
+router.delete("/expense/:expenseId", async (req, res) => {
   const { expenseId } = req.params;
 
   try {
