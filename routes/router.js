@@ -4,6 +4,7 @@ const bcrypt = require("bcryptjs");
 const router = express.Router();
 const authenticate = require("../middleware/authenticate");
 const authMiddleware = require("../middleware/auth");
+const generateAIRecommendation = require('../AI/aiSuggestions'); 
 
 router.post("/register", async (req, res) => {
   const { fname, email, password, cpassword } = req.body;
@@ -232,5 +233,28 @@ router.get("/chart/:expenseId", async (req, res) => {
   }
 });
 
+router.post('/api/ai/suggestions', async (req, res) => {
+  const { userId, month } = req.body; // User ID and month from frontend
+
+  try {
+      // Fetch the user's expense data for the given month
+      const userData = await User.findOne({ _id: userId, 'expenses.month': month }, { 'expenses.$': 1 });
+
+      if (!userData || !userData.expenses.length) {
+          return res.status(404).json({ message: 'No expense data found for this month' });
+      }
+
+      const expenseData = userData.expenses[0]; // Get the first expense data for the month
+
+      // Generate AI recommendation based on the expense data
+      const suggestion = generateAIRecommendation(expenseData);
+
+      // Respond with AI suggestion
+      res.json({ suggestion });
+  } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: 'Internal server error' });
+  }
+});
 
 module.exports = router;
