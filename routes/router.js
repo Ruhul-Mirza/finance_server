@@ -6,17 +6,16 @@ const authenticate = require("../middleware/authenticate");
 const authMiddleware = require("../middleware/auth");
 const generateAIRecommendation = require('../AI/aiSuggestions'); 
 
+// SIGNUP
 router.post("/register", async (req, res) => {
-  const { fname, email, password, cpassword } = req.body;
+  const { fname, email, password, cpassword,dob } = req.body;
 
-  if (!fname || !email || !password || !cpassword) {
+  if (!fname || !email || !password || !cpassword || !dob) {
     return res.status(400).json({ error: "Fill all the details" });
   }
 
   try {
-    // Correct email
     const alreadyUser = await User.findOne({ email: email });
-
     if (alreadyUser) {
       return res.status(400).json({ error: "This email already exists" });
     } else if (password !== cpassword) {
@@ -29,6 +28,7 @@ router.post("/register", async (req, res) => {
         email,
         password,
         cpassword,
+        dob,
       });
       const adding = await addUser.save();
       console.log(adding);
@@ -40,23 +40,20 @@ router.post("/register", async (req, res) => {
   }
 });
 
+// LOGIN 
 router.post("/", async (req, res) => {
   const { email, password } = req.body;
-
   if (!email || !password) {
     return res.status(400).json({ error: "Fill all the details" });
   }
-
   try {
     const userAlready = await User.findOne({ email: email });
-
     if (!userAlready) {
       return res.status(404).json({ error: "User not found" });
     }
 
     // Check password
     const isMatch = await bcrypt.compare(password, userAlready.password);
-
     if (!isMatch) {
       return res.status(401).json({ error: "Invalid credentials" });
     } else {
@@ -77,6 +74,8 @@ router.post("/", async (req, res) => {
   }
 });
 
+
+// VALIDATING USER
 router.get("/validuser", authenticate, async (req, res) => {
   try {
     const ValidUser = await User.findOne({ _id: req.userId });
@@ -86,6 +85,7 @@ router.get("/validuser", authenticate, async (req, res) => {
   }
 });
 
+// LOGOUT
 router.get("/logout", authenticate, async (req, res) => {
   try {
     req.mainUser.tokens = req.mainUser.tokens.filter((curtokens) => {
@@ -104,6 +104,7 @@ router.get("/logout", authenticate, async (req, res) => {
   }
 });
 
+// ADDING EXPENSE DATA
 router.post("/expense", authMiddleware, async (req, res) => {
     const {
       home,
@@ -118,12 +119,10 @@ router.post("/expense", authMiddleware, async (req, res) => {
     } = req.body;
   
     try {
-      const monthCheck = await User.findOne({ "expenses.month": month });  // check for expenses with the same month
+      const monthCheck = await User.findOne({ "expenses.month": month });  // check for expenses with month
       if (monthCheck) {
-        // If the month already exists, send a conflict response
         return res.status(409).json({ message: "Expense for this month is already saved!" });
       }
-  
       // If the month doesn't exist, save the expense
       const newExpense = {
         home,
@@ -148,7 +147,7 @@ router.post("/expense", authMiddleware, async (req, res) => {
     }
   });
   
-// Backend Route to Fetch Only Expenses and Savings Data
+// FINDING EXPENSE DATA
 router.get("/expense", async (req, res) => {
   try {
     const userData = await User.find({}, { expenses: 1, savings: 1 });
@@ -157,20 +156,19 @@ router.get("/expense", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+// UPDATING EXPENSE DATA
 router.put("/expense/:expenseId", authMiddleware, async (req, res) => {
   const { expenseId } = req.params;
-  const { expenses } = req.body; // Only handle expenses, not savings
-
+  const { expenses } = req.body; 
   try {
     const user = await User.findOne({ _id: req.user._id });
-
     // Update the expense
     const expenseIndex = user.expenses.findIndex(
       (exp) => exp._id.toString() === expenseId
     );
-
     if (expenseIndex !== -1) {
-      user.expenses[expenseIndex] = expenses; // Update only the expense data, no savings
+      user.expenses[expenseIndex] = expenses;
       await user.save();
       res
         .status(200)
@@ -184,12 +182,10 @@ router.put("/expense/:expenseId", authMiddleware, async (req, res) => {
   }
 });
 
-// DELETE route to delete an expense by its ID
+// DELETING EXPENSE DATA
 router.delete("/expense/:expenseId", async (req, res) => {
   const { expenseId } = req.params;
-
   try {
-    // Find the user and remove the specific expense from the expenses array
     const updatedUser = await User.updateOne(
       { "expenses._id": expenseId },
       {
@@ -208,6 +204,8 @@ router.delete("/expense/:expenseId", async (req, res) => {
   }
 });
 
+
+// DISPLAYING CHART
 router.get("/chart/:expenseId", async (req, res) => {
   try {
     console.log("Request ID:", req.params.expenseId);
@@ -229,27 +227,23 @@ router.get("/chart/:expenseId", async (req, res) => {
     res.json(expense);
   } catch (error) {
     console.error("Error fetching data:", error);
-    res.status(500).json({ error: error.message }); // Show the real error for now
+    res.status(500).json({ error: error.message }); 
   }
 });
 
+// API INTEGRATION
 router.post('/api/ai/suggestions', async (req, res) => {
-  const { userId, month } = req.body; // User ID and month from frontend
+  const { userId, month } = req.body; 
 
   try {
-      // Fetch the user's expense data for the given month
+    
       const userData = await User.findOne({ _id: userId, 'expenses.month': month }, { 'expenses.$': 1 });
 
       if (!userData || !userData.expenses.length) {
           return res.status(404).json({ message: 'No expense data found for this month' });
       }
-
-      const expenseData = userData.expenses[0]; // Get the first expense data for the month
-
-      // Generate AI recommendation based on the expense data
+      const expenseData = userData.expenses[0]; 
       const suggestion = generateAIRecommendation(expenseData);
-
-      // Respond with AI suggestion
       res.json({ suggestion });
   } catch (error) {
       console.error(error);

@@ -1,8 +1,10 @@
 const mongoose = require("mongoose");
-const validator = require("validator");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const secretKey = "mirzaruhulnazirhussain12345678910";
+const validator = require("validator");
+
+const secretKey = "mirzaruhulnazirhussain12345678910"; // Use a secure key in production
+
 const userSchema = mongoose.Schema({
   fname: {
     type: String,
@@ -24,9 +26,8 @@ const userSchema = mongoose.Schema({
     minlength: 6,
     required: true,
   },
-  cpassword: {
-    type: String,
-    minlength: 6,
+  dob: {
+    type: Date,
     required: true,
   },
   tokens: [
@@ -40,7 +41,7 @@ const userSchema = mongoose.Schema({
   expenses: [
     {
       home: String,
-      month:String,
+      month: String,
       rentAmount: Number,
       foodAmount: Number,
       entertainmentAmount: Number,
@@ -50,32 +51,29 @@ const userSchema = mongoose.Schema({
       monthlyAmount: Number,
     },
   ],
- 
 });
 
+// Pre-save hook for hashing passwords
 userSchema.pre("save", async function (next) {
   if (this.isModified("password")) {
+    // Hash password and confirm password (cpassword)
     this.password = await bcrypt.hash(this.password, 13);
-    this.cpassword = await bcrypt.hash(this.cpassword, 13);
   }
-
   next();
 });
 
-// token
+// Method for generating JWT token
 userSchema.methods.generateAuthtoken = async function () {
   try {
-    let tokenGenerated = jwt.sign({ _id: this._id }, secretKey);
-    // if (!this.tokens) {
-    //     this.tokens = [];
-    // }
-    this.tokens = this.tokens.concat({ token: tokenGenerated });
+    const token = jwt.sign({ _id: this._id }, secretKey);
+    this.tokens = this.tokens.concat({ token }); // Save token in the user's tokens array
     await this.save();
-    return tokenGenerated;
+    return token;
   } catch (error) {
     console.error("Error generating token:", error);
     throw new Error("Token generation failed");
   }
 };
-const User = new mongoose.model("user", userSchema);
+
+const User = mongoose.model("User", userSchema);
 module.exports = User;
