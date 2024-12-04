@@ -8,9 +8,9 @@ const generateAIRecommendation = require('../AI/aiSuggestions');
 
 // SIGNUP
 router.post("/register", async (req, res) => {
-  const { fname, email, password, cpassword,dob } = req.body;
+  const { fname, email, password, cpassword } = req.body;
 
-  if (!fname || !email || !password || !cpassword || !dob) {
+  if (!fname || !email || !password || !cpassword ) {
     return res.status(400).json({ error: "Fill all the details" });
   }
 
@@ -28,7 +28,6 @@ router.post("/register", async (req, res) => {
         email,
         password,
         cpassword,
-        dob,
       });
       const adding = await addUser.save();
       console.log(adding);

@@ -26,10 +26,6 @@ const userSchema = mongoose.Schema({
     minlength: 6,
     required: true,
   },
-  dob: {
-    type: Date,
-    required: true,
-  },
   tokens: [
     {
       token: {
